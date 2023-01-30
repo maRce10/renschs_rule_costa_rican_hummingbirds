@@ -1,0 +1,298 @@
+---
+title: <font size="7"><b>Data analysis</b></font>
+subtitle: <font size="4"><b>Rensch's Rule in Costa Rican hummingbirds</b><br><br>University of Costa Rica</font>
+author: <font size="3"><a href="http://marceloarayasalas.weebly.com/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    css: extra.css
+    df_print: tibble
+    highlight: pygments  
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+fontsize: 12pt 
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- this code add line numbers to code blocks -->
+<!-- only works when code folding is not used in yaml (code_folding: show) -->
+
+<style>
+body
+  { counter-reset: source-line 0; }
+pre.numberSource code
+  { counter-reset: none; }
+</style>
+
+```{r load packages and setup style, echo = FALSE, message = FALSE, warning=FALSE}
+
+# github packages must include user name ("user/package")
+# bioconductor packages must include "bioc" ("bioc/package")
+# knitr is require for creating html/pdf/word reports
+# kableExtra is used to print pretty formatted tables 
+# formatR is used for soft-wrapping code
+# xaringanExtra::use_clipboard is used for adding a copy button to each code block
+pkgs <- c("kableExtra", "knitr", "formatR", "rprojroot", "xaringanExtra", "ape", "readxl", bioconductor = "ggtree", github = "maRce10/brmsish", github = "maRce10/sketchy", "brms", "viridis")
+
+# install/ load packages
+sketchy::load_packages(pkgs, quite = TRUE)
+
+# set working directory as project directory or one directory above,
+rootdir <- try(rprojroot::find_rstudio_root_file(), silent = TRUE)
+if (is(rootdir, "try-error")) rootdir <-  ".."
+opts_knit$set(root.dir = rootdir)
+
+# options to customize chunk outputs
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors", # for code line numbers
+  tidy.opts = list(width.cutoff = 65), 
+  tidy = TRUE,
+  message = FALSE
+ )
+
+# this is a customized printing style data frames 
+# screws up tibble function
+tibble <- function(x, ...) { 
+  x <- kbl(x, digits=4, align= 'c', row.names = FALSE) 
+   x <- kable_styling(x, position ="center", full_width = FALSE,  bootstrap_options = c("striped", "hover", "condensed", "responsive")) 
+   asis_output(x)
+}
+
+registerS3method("knit_print", "data.frame", tibble)
+
+# to add copy button to code blocks
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clipboard\"></i>",
+    success_text = "<i class=\"fa fa-check\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times-circle\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+
+source("~/Dropbox/R_package_testing/brmsish/R/html_summary.R")
+```
+
+&nbsp; 
+
+<!-- skyblue box -->
+<div class="alert alert-info">
+
+# Purpose
+
+- Explore sexual size dimorphism in hummingbird species from Costa Rica
+
+- Evaluate Rensch's Rule
+
+</div>
+
+&nbsp; 
+
+
+<!-- light brown box -->
+<div class="alert alert-warning">
+
+# Report overview
+
+- You can have the sections listed here, for instance:
+
+  - [Explore data](#explore-data)
+  - [Run statistical models](#run-statistical-models)
+  - [Size comparison among sexes](#size-comparison-among-sexes)
+  - [SSD (Lovich-Gibbons ratio) vs male size](#ssd-(lovich-gibbons ratio)-vs-male-size)
+
+</div>
+
+&nbsp;
+
+# Explore data
+
+```{r, eval = TRUE}
+
+# read data
+dat <- as.data.frame(read_excel("./data/raw/supplementary data.xlsx"))
+
+# read tree
+tree <- read.tree("./data/raw/imputed hummer tree 339 spp.tre")
+
+dat$`scientific name`[dat$`scientific name` == "Phaetornis guy"] <- "Phaethornis guy"
+dat$`scientific name`[dat$`scientific name` == "Phaetornis longirostris"] <- "Phaethornis longirostris"
+dat$`scientific name`[dat$`scientific name` == "Heliomaster longisrostris"] <- "Heliomaster longirostris"
+dat$scientific_name <- gsub(" ", "_", dat$`scientific name`)
+
+tree$tip.label[tree$tip.label == "Amazilia_amabilis"] <- "Polyerata_amabilis"
+tree$tip.label[tree$tip.label == "Hylocharis_eliciae"] <- "Chlorestes_eliciae"
+tree$tip.label[tree$tip.label == "Chlorostilbon_canivetii"] <- "Cynanthus_canivetii"
+tree$tip.label[tree$tip.label == "Elvira_cupreiceps"] <- "Microchera_cupreiceps"
+tree$tip.label[tree$tip.label == "Calliphlox_bryantae"] <- "Philodice_bryantae"
+tree$tip.label[tree$tip.label == "Amazilia_edward"] <- "Saucerottia_edward"
+tree$tip.label[tree$tip.label == "Amazilia_saucerottei"] <- "Saucerottia_hoffmanni"
+tree$tip.label[tree$tip.label == "Amazilia_saucerottei"] <- "Saucerottia_hoffmanni"
+tree$tip.label[tree$tip.label == "Amazilia_candida"] <- "Chlorestes_candida"
+tree$tip.label[tree$tip.label == "Elvira_chionura"] <- "Microchera_chonura"
+
+# setdiff(unique(dat$scientific_name), tree$tip.label)
+
+subtree <- drop.tip(phy = tree, tip = setdiff(tree$tip.label, unique(dat$scientific_name))
+)
+
+names(dat) <- gsub(" ", ".", names(dat))
+
+subtree2 <- subtree
+subtree2$tip.label <- gsub("_", " ", subtree2$tip.label)
+ggtree(subtree2, layout = "circular", col = viridis(10)[7]) + geom_tiplab(size = 4) + theme(plot.margin = unit(c(30, 10, 30, 10), "mm"))
+
+```
+
+# Run statistical models
+
+## Size comparison among sexes
+### log(females) ~ log(males) 
+
+(note that in the data supplied ln.SEX.weight variables are in natural log)
+
+```{r, eval = TRUE}
+
+# model settings
+v.cv.tree <- ape::vcv.phylo(subtree)
+
+prior <- c(
+    prior(normal(0, 10), "b"),
+    prior(normal(0, 50), "Intercept"),
+    prior(student_t(3, 0, 20), "sd"),
+    prior(student_t(3, 0, 20), "sigma")
+  )
+
+```
+
+```{r, eval = FALSE}
+
+male_x_mod <- brm(
+  ln.female.weight ~ ln.male.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+  prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file =  "./data/processed/male_vs_female_size"
+)
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/male_vs_female_size.rds", n.posterior = 1000)
+
+```
+
+### log(males) ~ log(females) 
+
+```{r, eval = FALSE}
+
+female_x_mod <- brm(
+  ln.male.weight ~ ln.female.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+   prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file =  "./data/processed/female_vs_male_size.RDS"
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/female_vs_male_size.RDS", n.posterior = 1000)
+
+```
+
+## SSD (Lovich-Gibbons ratio) vs male size
+
+- SSD represented as aboslute Lovich-Gibbons ratio
+- sex size as log of weight
+
+### Absolute SSD vs log male size
+```{r, eval = FALSE}
+
+male_vs_ssd_mod <- brm(
+  aboluteSSD ~ ln.male.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+  prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  s =  "./data/processed/male_vs_abs_SSD.RDS")
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/male_vs_abs_SSD.RDS", n.posterior = 1000)
+
+```
+
+### absolute SSD vs log female size
+```{r, eval = FALSE}
+
+female_vs_ssd_mod <- brm(
+  aboluteSSD ~ ln.female.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+   prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file = "./data/processed/female_vs_abs_SSD.RDS")
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/female_vs_abs_SSD.RDS", n.posterior = 1000)
+
+```
+
+<!-- '&nbsp;' adds blank space -->
+
+
+
+<!-- light green box -->
+
+<div class="alert alert-success">
+
+&nbsp; 
+
+# Takeaways
+
+ - Dimorpism increases with body size in males but not in females
+
+
+
+</div>
+
+&nbsp;
+
+<!-- '---' adds a gray vertical line -->
+
+---
+
+&nbsp; 
+ 
+ <!-- add packages used, system details and versions  -->
+ 
+<font size="4">Session information</font>
+
+```{r session info, echo=F}
+
+sessionInfo()
+
+```

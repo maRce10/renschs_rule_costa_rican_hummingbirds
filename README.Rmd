@@ -1,0 +1,53 @@
+---
+title: Rensch's rule in  Costa Rican hummingbirds
+author: Marcelo Araya-Salas
+output: github_document
+date: "`r Sys.Date()`"
+editor_options:
+  chunk_output_type: console
+---
+
+<!-- Short Description  -->
+Evaluate Rensch's
+
+*Updated on `r Sys.time()`*
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+
+library(rmarkdown)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  out.width = "100%"
+)
+```
+
+
+## Table of contents
+* [General info](#general-info)
+  * [Analyses](#Analyses)
+    * [To do list](#to-do-list)
+      * [Contact](#contact)
+
+## General info
+
+Goals: Explore sexual size dimorphism in hummingbird species from Costa Rica, and evaluate Rensch's Rule
+## Analysis
+
+* [Statistical analysis](https://rpubs.com/marcelo-araya-salas/996924)
+
+## In progress
+
+*  
+
+## To-do list
+
+* 
+
+## Status
+Project is: _in progress_
+
+## Contact
+Created by [Marcelo Araya Salas](marceloarayasalas.weebly.com/)
