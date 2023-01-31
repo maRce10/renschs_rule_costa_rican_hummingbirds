@@ -1,5 +1,5 @@
 ---
-title: Rensch's rule in  Costa Rican hummingbirds
+title: Rensch's rule in Costa Rican hummingbirds
 author: Marcelo Araya-Salas
 output: github_document
 date: "`r Sys.Date()`"
