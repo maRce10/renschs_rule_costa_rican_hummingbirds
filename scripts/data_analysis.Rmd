@@ -37,7 +37,7 @@ pre.numberSource code
 # kableExtra is used to print pretty formatted tables 
 # formatR is used for soft-wrapping code
 # xaringanExtra::use_clipboard is used for adding a copy button to each code block
-pkgs <- c("kableExtra", "knitr", "formatR", "rprojroot", "xaringanExtra", "ape", "readxl", bioconductor = "ggtree", github = "maRce10/brmsish", github = "maRce10/sketchy", "brms", "viridis")
+pkgs <- c("kableExtra", "knitr", "formatR", "rprojroot", "xaringanExtra", "ape", "readxl", bioconductor = "ggtree", github = "maRce10/brmsish", github = "maRce10/sketchy", "brms", "viridis", "ggplot2")
 
 # install/ load packages
 sketchy::load_packages(pkgs, quite = TRUE)
@@ -75,7 +75,10 @@ htmltools::tagList(
   rmarkdown::html_dependency_font_awesome()
 )
 
+source("~/Dropbox/R_package_testing/brmsish/R/read_summary.R")
 source("~/Dropbox/R_package_testing/brmsish/R/html_summary.R")
+source("~/Dropbox/R_package_testing/brmsish/R/helpers.R")
+
 ```
 
 &nbsp; 
@@ -147,6 +150,11 @@ subtree2 <- subtree
 subtree2$tip.label <- gsub("_", " ", subtree2$tip.label)
 ggtree(subtree2, layout = "circular", col = viridis(10)[7]) + geom_tiplab(size = 4) + theme(plot.margin = unit(c(30, 10, 30, 10), "mm"))
 
+# add log 10 variables
+dat$lg10.female.weight <- log10(dat$female.weight)
+dat$lg10.male.weight <- log10(dat$male.weight)
+
+
 ```
 
 # Run statistical models
@@ -168,6 +176,7 @@ prior <- c(
     prior(student_t(3, 0, 20), "sigma")
   )
 
+iter <- 10000
 ```
 
 ```{r, eval = FALSE}
@@ -180,16 +189,43 @@ male_x_mod <- brm(
   prior = prior,
   iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  file =  "./data/processed/male_vs_female_size"
+  file =  "./data/processed/male_vs_female_size", 
+  file_refit = "always"
 )
 
 ```
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/male_vs_female_size.rds", n.posterior = 1000)
+html_summary(read.file = "./data/processed/male_vs_female_size.rds", highlight = TRUE)
 
 ```
+
+
+### log10(females) ~ log10(males) 
+
+```{r, eval = FALSE}
+
+log10_male_x_mod <- brm(
+  lg10.female.weight ~ lg10.male.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+  prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file =  "./data/processed/log10_male_vs_female_size",
+  file_refit = "always"
+)
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_male_vs_female_size.rds", highlight = TRUE)
+
+```
+
 
 ### log(males) ~ log(females) 
 
@@ -203,16 +239,42 @@ female_x_mod <- brm(
    prior = prior,
   iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  file =  "./data/processed/female_vs_male_size.RDS"
+  file =  "./data/processed/female_vs_male_size",
+  file_refit = "always"
   )
 
 ```
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/female_vs_male_size.RDS", n.posterior = 1000)
+html_summary(read.file = "./data/processed/female_vs_male_size.rds", highlight = TRUE)
 
 ```
+
+### log10(males) ~ log10(females) 
+
+```{r, eval = FALSE}
+
+log10_female_x_mod <- brm(
+  lg10.male.weight ~ lg10.female.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+   prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file =  "./data/processed/log10_female_vs_male_size",
+  file_refit = "always"
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_female_vs_male_size.rds", highlight = TRUE)
+
+```
+
 
 ## SSD (Lovich-Gibbons ratio) vs male size
 
@@ -230,13 +292,38 @@ male_vs_ssd_mod <- brm(
   prior = prior,
   iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  s =  "./data/processed/male_vs_abs_SSD.RDS")
+  file = "./data/processed/male_vs_abs_SSD",
+  file_refit = "always"
+  )
 
 ```
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/male_vs_abs_SSD.RDS", n.posterior = 1000)
+html_summary(read.file = "./data/processed/male_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+### Absolute SSD vs log10 male size
+```{r, eval = FALSE}
+
+log10_male_vs_ssd_mod <- brm(
+  aboluteSSD ~ lg10.male.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+  prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file = "./data/processed/log10_male_vs_abs_SSD",
+  file_refit = "always"
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_male_vs_abs_SSD.rds", highlight = TRUE)
 
 ```
 
@@ -251,18 +338,116 @@ female_vs_ssd_mod <- brm(
    prior = prior,
   iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  file = "./data/processed/female_vs_abs_SSD.RDS")
+  file = "./data/processed/female_vs_abs_SSD.rds", 
+  file_refit = "always"
+  )
 
 ```
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/female_vs_abs_SSD.RDS", n.posterior = 1000)
+html_summary(read.file = "./data/processed/female_vs_abs_SSD.rds", highlight = TRUE)
 
 ```
 
-<!-- '&nbsp;' adds blank space -->
+### absolute SSD vs log10 female size
+```{r, eval = FALSE}
 
+log10_female_vs_ssd_mod <- brm(
+  aboluteSSD ~ lg10.female.weight  + (1|gr(scientific_name, cov = v.cv.tree)),
+  data = dat,
+  family = gaussian(),
+  data2 = list(v.cv.tree = v.cv.tree),
+   prior = prior,
+  iter = iter,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  file = "./data/processed/log10_female_vs_abs_SSD", 
+  file_refit = "always"
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_female_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+
+# Graphs
+
+## Male vs female body mass
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_male_vs_female_size.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.male.weight                                      
+
+fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = lg10.female.weight)) +
+    geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
+    geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    geom_point(color = viridis(10, alpha = 0.6)[7], size = 3) +
+    theme_classic(base_size = 20) + labs(x = "log10(male body mass)", y = "log10(female body mass)")
+
+# ggsave(filename = "./output/log10_male_vs_absolute_SSD_70dpi.tiff", dpi = 70)
+# 
+# ggsave(filename = "./output/log10_male_vs_absolute_SSD_300dpi.tiff", dpi = 300)
+
+
+```
+
+
+## Male body mass vs absolute SSD
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_male_vs_abs_SSD.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.male.weight                                      
+
+fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = aboluteSSD)) +
+    geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
+    geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    geom_point(color = viridis(10, alpha = 0.6)[7], size = 3) +
+    theme_classic(base_size = 20) + labs(x = "log10(male body mass)", y = "Dimorphism (absolute SSD)")
+
+# ggsave(filename = "./output/log10_female_vs_absolute_SSD_300dpi.tiff", dpi = 300)
+# 
+# ggsave(filename = "./output/log10_female_vs_absolute_SSD_70dpi.tiff", dpi = 70)
+
+```
+
+## Female body mass vs absolute SSD
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_female_vs_abs_SSD.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.female.weight                                      
+
+fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.female.weight, y = aboluteSSD)) +
+    # geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.female.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.female.weight), yend = max(pred_dat$estimate__))) +
+    # geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    geom_point(color = viridis(10, alpha = 0.6)[7], size = 3) +
+    theme_classic(base_size = 20) + labs(x = "log10(female body mass)", y = "Dimorphism (absolute SSD)")
+
+# ggsave(filename = "./output/male_vs_female_size_10log_300dpi.tiff", dpi = 300)
+# ggsave(filename = "./output/male_vs_female_size_10log_70dpi.tiff", dpi = 70)
+
+```
 
 
 <!-- light green box -->
