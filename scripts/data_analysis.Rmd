@@ -78,6 +78,7 @@ htmltools::tagList(
 source("~/Dropbox/R_package_testing/brmsish/R/read_summary.R")
 source("~/Dropbox/R_package_testing/brmsish/R/html_summary.R")
 source("~/Dropbox/R_package_testing/brmsish/R/helpers.R")
+source("~/Dropbox/R_package_testing/brmsish/R/check_models_rds.R")
 
 ```
 
@@ -386,7 +387,7 @@ gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.male.weight                                      
 
-fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
 
 ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = lg10.female.weight)) +
     geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
@@ -412,7 +413,7 @@ gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.male.weight                                      
 
-fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
 
 ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = aboluteSSD)) +
     geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
@@ -436,7 +437,7 @@ gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.female.weight                                      
 
-fit_summ <- .summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975))
 
 ggplot(data = dat, mapping = aes(x = lg10.female.weight, y = aboluteSSD)) +
     # geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.female.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.female.weight), yend = max(pred_dat$estimate__))) +
@@ -449,6 +450,14 @@ ggplot(data = dat, mapping = aes(x = lg10.female.weight, y = aboluteSSD)) +
 
 ```
 
+
+# Model diagnostics
+
+```{r, results='asis'}
+
+check_rds_models(path = "./data/processed", html = TRUE)
+
+```
 
 <!-- light green box -->
 
