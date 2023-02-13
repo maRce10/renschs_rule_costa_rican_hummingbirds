@@ -1,0 +1,614 @@
+---
+title: <font size="7"><b>Data analysis</b></font>
+subtitle: <font size="4"><b>Rensch's Rule in Costa Rican hummingbirds</b><br>University of Costa Rica</font>
+author: <font size="3"><a href="http://marceloarayasalas.weebly.com/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 2
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options: 
+  chunk_output_type: console
+---
+
+```{=html}
+<style>
+body
+  { counter-reset: source-line 0; }
+pre.numberSource code
+  { counter-reset: none; }
+</style>
+```
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory or one directory above,
+rootdir <- try(rprojroot::find_rstudio_root_file(), silent = TRUE)
+if (is(rootdir, "try-error")) rootdir <-  ".."
+knitr::opts_knit$set(root.dir = rootdir)
+
+```
+
+```{r add link to github repo, echo = FALSE, results='asis'}
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  cat("\nSource code, data and version control of the project found  at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+```{r load packages and setup style, echo = FALSE, message = FALSE, warning=FALSE}
+
+# github packages must include user name ("user/package")
+# bioconductor packages must include "bioc" ("bioc/package")
+# knitr is require for creating html/pdf/word reports
+# kableExtra is used to print pretty formatted tables 
+# formatR is used for soft-wrapping code
+# xaringanExtra::use_clipboard is used for adding a copy button to each code block
+pkgs <- c("kableExtra", "knitr", "formatR", "rprojroot", "xaringanExtra", "ape", "readxl", bioconductor = "ggtree", github = "maRce10/brmsish", github = "maRce10/sketchy", "brms", "viridis", "ggplot2", "phangorn", "gghalves")
+
+# install/ load packages
+sketchy::load_packages(pkgs, quite = TRUE)
+
+# set working directory as project directory or one directory above,
+rootdir <- try(rprojroot::find_rstudio_root_file(), silent = TRUE)
+if (is(rootdir, "try-error")) rootdir <-  ".."
+opts_knit$set(root.dir = rootdir)
+
+# options to customize chunk outputs
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors", # for code line numbers
+  tidy.opts = list(width.cutoff = 65), 
+  tidy = TRUE,
+  message = FALSE,
+  warning = FALSE
+ )
+
+# to add copy button to code blocks
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clipboard\"></i>",
+    success_text = "<i class=\"fa fa-check\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times-circle\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+
+source("~/Dropbox/R_package_testing/brmsish/R/read_summary.R")
+source("~/Dropbox/R_package_testing/brmsish/R/html_summary.R")
+source("~/Dropbox/R_package_testing/brmsish/R/helpers.R")
+source("~/Dropbox/R_package_testing/brmsish/R/check_models_rds.R")
+source("~/Dropbox/R_package_testing/brmsish/R/phylogenetic_uncertainty.R")
+
+```
+
+&nbsp; 
+
+<!-- skyblue box -->
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+- Explore sexual size dimorphism in hummingbird species from Costa Rica
+
+- Evaluate Rensch's Rule
+
+</div>
+
+&nbsp; 
+
+
+<!-- light brown box -->
+<div class="alert alert-warning">
+
+# Report overview {.unnumbered .unlisted}
+
+- You can have the sections listed here, for instance:
+
+  - [Explore data](#explore-data)
+  - [Run statistical models](#run-statistical-models)
+  - [Size comparison among sexes](#size-comparison-among-sexes)
+  - [SSD (Lovich-Gibbons ratio) vs male size](#ssd-(lovich-gibbons ratio)-vs-male-size)
+
+</div>
+
+&nbsp;
+
+# Explore data
+
+```{r, eval = TRUE}
+
+# read data
+dat <- as.data.frame(read_excel("./data/raw/supplementary data.xlsx"))
+
+dat$Clade[dat$Clade == "Billiants"] <- "Brilliants"
+
+# read trees
+trees <- read.tree("./data/raw/Posterior trees fixed names 339 species 1 swift.trees")
+
+dat$`scientific name`[dat$`scientific name` == "Phaetornis guy"] <- "Phaethornis guy"
+dat$`scientific name`[dat$`scientific name` == "Phaetornis longirostris"] <- "Phaethornis longirostris"
+dat$`scientific name`[dat$`scientific name` == "Heliomaster longisrostris"] <- "Heliomaster longirostris"
+dat$scientific_name <- gsub(" ", "_", dat$`scientific name`)
+
+trees <- lapply(trees, function(tree){
+    tree$tip.label[tree$tip.label == "Amazilia_amabilis"] <- "Polyerata_amabilis"
+    tree$tip.label[tree$tip.label == "Hylocharis_eliciae"] <- "Chlorestes_eliciae"
+    tree$tip.label[tree$tip.label == "Chlorostilbon_canivetii"] <- "Cynanthus_canivetii"
+    tree$tip.label[tree$tip.label == "Elvira_cupreiceps"] <- "Microchera_cupreiceps"
+    tree$tip.label[tree$tip.label == "Calliphlox_bryantae"] <- "Philodice_bryantae"
+    tree$tip.label[tree$tip.label == "Amazilia_edward"] <- "Saucerottia_edward"
+    tree$tip.label[tree$tip.label == "Amazilia_saucerottei"] <- "Saucerottia_hoffmanni"
+    tree$tip.label[tree$tip.label == "Amazilia_saucerottei"] <- "Saucerottia_hoffmanni"
+    tree$tip.label[tree$tip.label == "Amazilia_candida"] <- "Chlorestes_candida"
+    tree$tip.label[tree$tip.label == "Elvira_chionura"] <- "Microchera_chonura"
+    
+    subtree <- drop.tip(phy = tree, tip = setdiff(tree$tip.label, unique(dat$scientific_name))
+)
+
+    return(tree)
+})
+
+
+names(dat) <- gsub(" ", ".", names(dat))
+
+# maximum clade credibility consensus tree
+mcd_tree <- phangorn::maxCladeCred(trees)
+
+mcd_tree$tip.label <- gsub("_", " ", mcd_tree$tip.label)
+
+ggtree(mcd_tree, layout = "circular", col = viridis(10)[7]) + geom_tiplab(size = 2) + theme(plot.margin = unit(c(30, 10, 30, 10), "mm"))
+
+# add log 10 variables
+dat$lg10.female.weight <- log10(dat$female.weight)
+dat$lg10.male.weight <- log10(dat$male.weight)
+
+```
+
+# Run statistical models
+
+```{r, eval = TRUE}
+
+prior <- c(
+    prior(normal(0, 10), "b"),
+    prior(normal(0, 50), "Intercept"),
+    prior(student_t(3, 0, 20), "sd"),
+    prior(student_t(3, 0, 20), "sigma")
+  )
+
+iter <- 10000
+
+chains <- 1
+
+cores <- 1
+```
+
+## Size comparison among sexes
+### log(females) ~ log(males) 
+
+(note that in the data supplied ln.SEX.weight variables are in natural log)
+
+```{r, eval = FALSE}
+
+male_x_mod <- phylogenetic_uncertainty(
+  ln.female.weight ~ ln.male.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "male_vs_female_size",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+)
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/male_vs_female_size.rds", highlight = TRUE)
+
+```
+
+
+### log10(females) ~ log10(males) 
+
+```{r, eval = FALSE}
+
+log10_male_x_mod <- phylogenetic_uncertainty(
+  lg10.female.weight ~ lg10.male.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "log10_male_vs_female_size",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+)
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_male_vs_female_size.rds", highlight = TRUE)
+
+```
+
+
+### log(males) ~ log(females) 
+
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  ln.male.weight ~ ln.female.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "female_vs_male_size",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/female_vs_male_size.rds", highlight = TRUE)
+
+```
+
+### log10(males) ~ log10(females) 
+
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  lg10.male.weight ~ lg10.female.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "log10_female_vs_male_size",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_female_vs_male_size.rds", highlight = TRUE)
+
+```
+
+
+## SSD (Lovich-Gibbons ratio) vs male size
+
+- SSD represented as aboslute Lovich-Gibbons ratio
+- sex size as log of weight
+
+### Absolute SSD vs log male size
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  aboluteSSD ~ ln.male.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "male_vs_abs_SSD",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+   )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/male_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+### Absolute SSD vs log10 male size
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  aboluteSSD ~ lg10.male.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "log10_male_vs_abs_SSD",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_male_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+### absolute SSD vs log female size
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  aboluteSSD ~ ln.female.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "female_vs_abs_SSD",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/female_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+### absolute SSD vs log10 female size
+```{r, eval = FALSE}
+
+phylogenetic_uncertainty(
+  aboluteSSD ~ lg10.female.weight,
+  data = dat,
+  sp.id.column = "scientific_name",
+  phylos = trees,
+  family = gaussian(),
+  prior = prior,
+  iter = 1000,
+  control=list(adapt_delta=0.99, max_treedepth=15),
+  model.name = "log10_female_vs_abs_SSD",  
+  save.models = FALSE,
+  save.combined = TRUE,
+  path = "./data/processed/", 
+  chains = chains, 
+  cores = cores
+  )
+
+```
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+
+html_summary(read.file = "./data/processed/log10_female_vs_abs_SSD.rds", highlight = TRUE)
+
+```
+
+
+# Graphs
+
+## Male vs female body mass
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_male_vs_female_size.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.male.weight 
+pred_dat$Clade <- "Hermits"
+
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = lg10.female.weight, fill = Clade, shape = Clade)) +
+    scale_fill_viridis_d(alpha = 0.5) +
+    geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
+    geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    scale_shape_manual(values = c(21, 22, 23, 21, 22, 23, 21, 22)) +
+    geom_point(size = 3, color = "transparent") +
+    theme_classic(base_size = 20) + labs(x = "log10(male body mass)", y = "log10(female body mass)")
+
+# ggsave(filename = "./output/log10_male_vs_absolute_SSD_70dpi.tiff", dpi = 70)
+# 
+# ggsave(filename = "./output/log10_male_vs_absolute_SSD_300dpi.tiff", dpi = 300)
+
+
+```
+
+
+## Male body mass vs absolute SSD
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_male_vs_abs_SSD.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.male.weight
+pred_dat$Clade <- "Hermits"
+
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = aboluteSSD, fill = Clade, shape = Clade)) +
+    scale_fill_viridis_d(alpha = 0.5) +
+    geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.male.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.male.weight), yend = max(pred_dat$estimate__))) +
+    geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    scale_shape_manual(values = c(21, 22, 23, 21, 22, 23, 21, 22)) +
+    geom_point(color = viridis(10, alpha = 0.6)[7], size = 3) +
+    theme_classic(base_size = 20) + labs(x = "log10(male body mass)", y = "Dimorphism (absolute SSD)")
+
+# ggsave(filename = "./output/log10_female_vs_absolute_SSD_300dpi.tiff", dpi = 300)
+# 
+# ggsave(filename = "./output/log10_female_vs_absolute_SSD_70dpi.tiff", dpi = 70)
+
+```
+
+## Female body mass vs absolute SSD
+
+```{r}
+
+fit <- readRDS("./data/processed/log10_female_vs_abs_SSD.rds")
+
+gg_fit <- conditional_effects(fit)
+
+pred_dat <- gg_fit$lg10.female.weight
+pred_dat$Clade <- "Hermits"         
+
+fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975))
+
+ggplot(data = dat, mapping = aes(x = lg10.female.weight, y = aboluteSSD, fill = Clade, shape = Clade)) +
+    scale_fill_viridis_d(alpha = 0.5) +
+    # geom_segment(data = pred_dat, mapping = aes(x = min(pred_dat$lg10.female.weight), y = min(pred_dat$estimate__), xend = max(pred_dat$lg10.female.weight), yend = max(pred_dat$estimate__))) +
+    # geom_ribbon(data = pred_dat, aes(ymin = lower__, ymax =  upper__), fill = "gray", alpha = 0.3) +
+    scale_shape_manual(values = c(21, 22, 23, 21, 22, 23, 21, 22)) +
+    geom_point(color = viridis(10, alpha = 0.6)[7], size = 3) +
+    theme_classic(base_size = 20) + labs(x = "log10(female body mass)", y = "Dimorphism (absolute SSD)")
+
+# ggsave(filename = "./output/male_vs_female_size_10log_300dpi.tiff", dpi = 300)
+# ggsave(filename = "./output/male_vs_female_size_10log_70dpi.tiff", dpi = 70)
+
+```
+
+```{r}
+
+fill_color <- viridis(10)[7]
+
+dat$Clade <- factor(dat$Clade, levels = c("Bees", "Coquettes", "Hermits", "Brilliants", "Emeralds", "Mangoes", "Mountain Gems", "Topazes"))
+
+agg_dat <- aggregate(`scientific_name` ~ Clade, data = dat, length)
+agg_dat$`Lovich-Gibbons.ratio` <- NA
+agg_dat$n.labels <- paste("n =", agg_dat$`scientific_name`)
+
+# set.seed(12)
+trans <-  function(height = 0, ...) ggplot2::position_jitter(height = height, ...)
+
+# composed box plot
+ggplot(dat, aes(y = `Lovich-Gibbons.ratio`, x = Clade)) +
+    geom_hline(yintercept = 0, lty = 2) +     
+## add half-violin from {ggdist} package
+  ggdist::stat_halfeye(
+    fill = fill_color,
+    alpha = 0.5,
+    ## custom bandwidth
+    adjust = .5,
+    ## adjust height
+    width = .6,
+    .width = 0,
+    ## move geom to the cright
+    justification = -.2,
+    point_colour = NA
+  ) +
+  geom_boxplot(fill = fill_color,
+    width = .15,
+    ## remove outliers
+    outlier.shape = NA ## `outlier.shape = NA` works as well
+  ) +
+  ## add justified jitter from the {gghalves} package
+  gghalves::geom_half_point(
+    color = fill_color,
+    ## draw jitter on the left
+    side = "l",
+    ## control range of jitter
+    range_scale = .4,
+    ## add some transparency
+    alpha = .5,
+    transformation = ggplot2::position_jitter(height = 0)
+
+  ) +
+    labs(x="Clade", y= "Lovich-Gibbons ratio"
+  ) +
+  ylim(c(-0.39, 0.145)) +
+  geom_text(data = agg_dat, aes(y = rep(-0.387, nrow(agg_dat)), x = Clade, label = n.labels), nudge_x = 0, size = 6) +
+     theme_classic(base_size = 18) +
+theme(axis.text.x = element_text(angle = 30, hjust = 1)) 
+
+```
+
+
+# Combined model diagnostics
+
+```{r, results='asis'}
+
+check_rds_models(path = "./data/processed", html = TRUE)
+
+```
+
+
+
+<!-- light green box -->
+
+<div class="alert alert-success">
+
+# Takeaways {.unnumbered .unlisted}
+
+ - Dimorpism increases with body size in males but not in females
+
+</div>
+
+&nbsp;
+
+<!-- '---' adds a gray vertical line -->
+
+---
+
+&nbsp; 
+ 
+ <!-- add packages used, system details and versions  -->
+ 
+# Session information {.unnumbered .unlisted}
+
+```{r session info, echo=F}
+
+sessionInfo()
+
+```
+    
