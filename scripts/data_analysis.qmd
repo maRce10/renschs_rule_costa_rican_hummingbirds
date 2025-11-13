@@ -1,7 +1,7 @@
 ---
 title: <font size="7"><b>Data analysis</b></font>
 subtitle: <font size="4"><b>Rensch's Rule in Costa Rican hummingbirds</b><br>University of Costa Rica</font>
-author: <font size="3"><a href="http://marceloarayasalas.weebly.com/">Marcelo Araya-Salas</a>
+author: <font size="3"><a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
 date: "`r Sys.Date()`"
 toc: true
 toc-depth: 2
@@ -85,11 +85,6 @@ htmltools::tagList(
   rmarkdown::html_dependency_font_awesome()
 )
 
-source("~/Dropbox/R_package_testing/brmsish/R/read_summary.R")
-source("~/Dropbox/R_package_testing/brmsish/R/html_summary.R")
-source("~/Dropbox/R_package_testing/brmsish/R/helpers.R")
-source("~/Dropbox/R_package_testing/brmsish/R/check_models_rds.R")
-source("~/Dropbox/R_package_testing/brmsish/R/phylogenetic_uncertainty.R")
 
 ```
 
@@ -208,10 +203,10 @@ male_x_mod <- phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "male_vs_female_size",  
-  save.models = FALSE,
+  fit.name = "male_vs_female_size",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -222,7 +217,7 @@ male_x_mod <- phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/male_vs_female_size.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/male_vs_female_size_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -238,10 +233,10 @@ log10_male_x_mod <- phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "log10_male_vs_female_size",  
-  save.models = FALSE,
+  fit.name = "log10_male_vs_female_size",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -252,7 +247,7 @@ log10_male_x_mod <- phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/log10_male_vs_female_size.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/log10_male_vs_female_size_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -268,10 +263,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "female_vs_male_size",  
-  save.models = FALSE,
+  fit.name = "female_vs_male_size",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -282,7 +277,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/female_vs_male_size.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/female_vs_male_size_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -297,10 +292,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "log10_female_vs_male_size",  
-  save.models = FALSE,
+  fit.name = "log10_female_vs_male_size",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -311,7 +306,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/log10_female_vs_male_size.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/log10_female_vs_male_size_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -331,10 +326,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "male_vs_abs_SSD",  
-  save.models = FALSE,
+  fit.name = "male_vs_abs_SSD",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -345,7 +340,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/male_vs_abs_SSD.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/male_vs_abs_SSD_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -359,10 +354,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "log10_male_vs_abs_SSD",  
-  save.models = FALSE,
+  fit.name = "log10_male_vs_abs_SSD",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -373,7 +368,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/log10_male_vs_abs_SSD.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/log10_male_vs_abs_SSD_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -387,10 +382,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "female_vs_abs_SSD",  
-  save.models = FALSE,
+  fit.name = "female_vs_abs_SSD",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -401,7 +396,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/female_vs_abs_SSD.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/female_vs_abs_SSD_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -415,10 +410,10 @@ phylogenetic_uncertainty(
   phylos = trees,
   family = gaussian(),
   prior = prior,
-  iter = 1000,
+  iter = iter,
   control=list(adapt_delta=0.99, max_treedepth=15),
-  model.name = "log10_female_vs_abs_SSD",  
-  save.models = FALSE,
+  fit.name = "log10_female_vs_abs_SSD",  
+  save.fits = FALSE,
   save.combined = TRUE,
   path = "./data/processed/", 
   chains = chains, 
@@ -429,7 +424,7 @@ phylogenetic_uncertainty(
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 
-html_summary(read.file = "./data/processed/log10_female_vs_abs_SSD.rds", highlight = TRUE)
+brmsish::extended_summary(read.file = "./data/processed/log10_female_vs_abs_SSD_1000_iterations.rds", highlight = TRUE)
 
 ```
 
@@ -440,14 +435,15 @@ html_summary(read.file = "./data/processed/log10_female_vs_abs_SSD.rds", highlig
 
 ```{r}
 
-fit <- readRDS("./data/processed/log10_male_vs_female_size.rds")
+fit <- readRDS("./data/processed/log10_male_vs_female_size_1000_iterations.rds")
 
 gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.male.weight 
 pred_dat$Clade <- "Hermits"
 
-fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- brmsish:::draw_summary(draws = posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975), spread.type = "MAD")
+
 
 ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = lg10.female.weight, fill = Clade, shape = Clade)) +
     scale_fill_viridis_d(alpha = 0.5) +
@@ -469,14 +465,14 @@ ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = lg10.female.weight, f
 
 ```{r}
 
-fit <- readRDS("./data/processed/log10_male_vs_abs_SSD.rds")
+fit <- readRDS("./data/processed/log10_male_vs_abs_SSD_1000_iterations.rds")
 
 gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.male.weight
 pred_dat$Clade <- "Hermits"
 
-fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- brmsish:::draw_summary(draws = posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.male.weight"), robust = TRUE, probs = c(0.025, 0.975), spread.type = "MAD")
 
 ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = aboluteSSD, fill = Clade, shape = Clade)) +
     scale_fill_viridis_d(alpha = 0.5) +
@@ -496,14 +492,14 @@ ggplot(data = dat, mapping = aes(x = lg10.male.weight, y = aboluteSSD, fill = Cl
 
 ```{r}
 
-fit <- readRDS("./data/processed/log10_female_vs_abs_SSD.rds")
+fit <- readRDS("./data/processed/log10_female_vs_abs_SSD_1000_iterations.rds")
 
 gg_fit <- conditional_effects(fit)
 
 pred_dat <- gg_fit$lg10.female.weight
 pred_dat$Clade <- "Hermits"         
 
-fit_summ <- draw_summary(posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975))
+fit_summ <- brmsish:::draw_summary(draws = posterior::as_draws_array(fit), variables = c("b_Intercept",  "b_lg10.female.weight"), robust = TRUE, probs = c(0.025, 0.975), spread.type = "MAD")
 
 ggplot(data = dat, mapping = aes(x = lg10.female.weight, y = aboluteSSD, fill = Clade, shape = Clade)) +
     scale_fill_viridis_d(alpha = 0.5) +
@@ -553,17 +549,17 @@ ggplot(dat, aes(y = `Lovich-Gibbons.ratio`, x = Clade)) +
     outlier.shape = NA ## `outlier.shape = NA` works as well
   ) +
   ## add justified jitter from the {gghalves} package
-  gghalves::geom_half_point(
-    color = fill_color,
-    ## draw jitter on the left
-    side = "l",
-    ## control range of jitter
-    range_scale = .4,
-    ## add some transparency
-    alpha = .5,
-    transformation = ggplot2::position_jitter(height = 0)
-
-  ) +
+  # geom_half_point(
+  #   color = fill_color,
+  #   ## draw jitter on the left
+  #   side = "l",
+  #   ## control range of jitter
+  #   range_scale = .4,
+  #   ## add some transparency
+  #   alpha = .5,
+  #   transformation = ggplot2::position_jitter(height = 0)
+  # 
+  # ) +
     labs(x="Clade", y= "Lovich-Gibbons ratio"
   ) +
   ylim(c(-0.39, 0.145)) +
@@ -578,7 +574,7 @@ theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 ```{r, results='asis'}
 
-check_rds_models(path = "./data/processed", html = TRUE)
+check_rds_fits(path = "./data/processed", html = TRUE)
 
 ```
 

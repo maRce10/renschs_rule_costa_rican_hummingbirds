@@ -4,8 +4,7 @@ username:
 account: rpubs
 server: rpubs.com
 hostUrl: rpubs.com
-appId: https://api.rpubs.com/api/v1/document/1002262/21c9291ee8114bd59f68a1c9a77681ca
-bundleId: https://api.rpubs.com/api/v1/document/1002262/21c9291ee8114bd59f68a1c9a77681ca
-url: http://rpubs.com/marcelo-araya-salas/1002262
-when: 1676304189.40487
-lastSyncTime: 1676304189.40488
+appId: https://api.rpubs.com/api/v1/document/1367687/5d8598fcee40481ca8de51fc09bcfe3a
+bundleId: https://api.rpubs.com/api/v1/document/1367687/5d8598fcee40481ca8de51fc09bcfe3a
+url: http://rpubs.com/publish/claim/1367687/1f7641edf2ad42228f3b243df24f81be
+version: 1

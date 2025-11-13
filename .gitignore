@@ -12,3 +12,11 @@ data/processed/female_vs_abs_SSD.rds
 data/processed/log10_female_vs_abs_SSD.rds
 data/processed/log10_male_vs_abs_SSD.rds
 data/processed/male_vs_abs_SSD.rds
+data/processed/female_vs_abs_SSD.rds
+data/processed/female_vs_abs_SSD.rds
+data/processed/log10_female_vs_abs_SSD.rds
+data/processed/log10_male_vs_abs_SSD.rds
+data/processed/male_vs_abs_SSD.rds
+/data/processed
+/data/processed
+*.rds
